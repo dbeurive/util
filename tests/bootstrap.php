@@ -13,6 +13,5 @@ if (! file_exists($path)) {
 
 require_once $path;
 
-$dirData = __DIR__ . DIRECTORY_SEPARATOR . "data";
-$dirReferences = __DIR__ . DIRECTORY_SEPARATOR . "references";
+
 
