@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0",
+  "version": "__VERSION__",
   "name": "dbeurive/util",
   "description": "This package contains PHP utilities.",
   "license": "MIT",
