@@ -58,6 +58,12 @@ Please, refer to the API (that you can generate), or to the code itself for deta
 | `trim($inString, $inWhere=UtilString::TRIM_END)` | Remove spaces or carriage returns from a given string. |
 | `text_linearize($inString, $inOptShrinkSpaces=false, $inOptTrimEnd=false)` |  This method takes a string that possibly spans over several lines and transforms it so it spans over one line only. |
 
+## Code
+
+| Function           | Description        |
+| ------------------ | ------------------ |  
+| `require_with_args($inPath, array $inArgs)` | Loads and executes a given PHP file, just like the function `require()`, except that it allows the caller to pass parameters to the code being executed. |
+
 # Examples
 
 The unit tests are good examples.
