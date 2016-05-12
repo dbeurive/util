@@ -64,6 +64,25 @@ Please, refer to the API (that you can generate), or to the code itself for deta
 | ------------------ | ------------------ |  
 | `require_with_args($inPath, array $inArgs)` | Loads and executes a given PHP file, just like the function `require()`, except that it allows the caller to pass parameters to the code being executed. |
 
+## SQL
+
+### MySql
+
+| Function           | Description        |
+| ------------------ | ------------------ | 
+| quoteFieldName     | Quote a field's name (see example below). |
+| quoteFieldsNames   | Quote an array of fields' names (see example below). |
+
+Examples:
+
+    quoteFieldName('id');       // => '`id`'
+    quoteFieldName('user.id');  // => '`user`.`id`'
+
+    quoteFieldsNames(['id', 'login', 'password']);              // => ['`id`', '`login`', '`password`']
+    quoteFieldsNames(['user.id', 'login', 'password']);         // => ['`user`.`id`', '`login`', '`password`']
+    quoteFieldsNames(['id', 'login', 'password'], 'user');      // => ['`user`.`id`', '`user`.`login`', '`user`.`password`']
+    quoteFieldsNames(['user.id', 'login', 'password'], 'user'); // => ['`user`.`id`', '`user`.`login`', '`user`.`password`']
+
 # Examples
 
 The unit tests are good examples.
