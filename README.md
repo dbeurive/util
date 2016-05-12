@@ -68,10 +68,10 @@ Please, refer to the API (that you can generate), or to the code itself for deta
 
 ### MySql
 
-| Function           | Description        |
-| ------------------ | ------------------ | 
-| quoteFieldName     | Quote a field's name (see example below). |
-| quoteFieldsNames   | Quote an array of fields' names (see example below). |
+| Function                                                         | Description        |
+| ---------------------------------------------------------------- | ------------------ | 
+| `quoteFieldName($inFieldName)`                                   | Quote a field's name (see example below). |
+| `quoteFieldsNames(array $inFieldsNames, $inOptTableName=null)`   | Quote, and optionally, fully qualify an array of fields' names (see example below). |
 
 Examples:
 
