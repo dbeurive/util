@@ -105,7 +105,7 @@ UtilMySql::quoteFieldsNames(['user.id', 'login', 'password'], 'user', 'prod');  
 UtilMySql::quoteFieldsNames(['prod.user.id', 'login', 'password'], 'user', 'prod'); // => ['`prod`.`user`.`id`', '`prod`.`user`.`login`', '`prod`.`user`.`password`']
 
 UtilMySql::qualifyFieldName('id', 'user');               // => 'user.id'
-UtilMySql::qualifyFieldName(''user.id','user');          // => 'user.id'
+UtilMySql::qualifyFieldName('user.id','user');           // => 'user.id'
 UtilMySql::qualifyFieldName('db.user.id', 'user');       // => 'db.user.id'
 UtilMySql::qualifyFieldName('id', 'user', 'db');         // => 'db.user.id'
 UtilMySql::qualifyFieldName('user.id', 'user', 'db');    // => 'db.user.id'
