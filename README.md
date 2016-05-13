@@ -51,6 +51,15 @@ Please, refer to the API (that you can generate), or to the code itself for deta
 | ------------------ | ------------------ |  
 | `to_callable_php_file($inData, $inOptFilePath=false)` | Return a string that represents the PHP code that, if executed, returns a given PHP data. |
 
+Examples:
+
+```php
+$data = ['A', 'B', 'C'];
+UtilData::to_callable_php_file($data, '/path/to/your/file.php');
+// ...
+$newData = require '/path/to/your/file.php'; // $newData = ['A', 'B', 'C'];
+```
+
 ## String
 
 | Function           | Description        |
@@ -64,6 +73,12 @@ Please, refer to the API (that you can generate), or to the code itself for deta
 | ------------------ | ------------------ |  
 | `require_with_args($inPath, array $inArgs)` | Loads and executes a given PHP file, just like the function `require()`, except that it allows the caller to pass parameters to the code being executed. |
 
+Examples:
+
+```php
+$result = UtilCode::require_with_args('/path/to/your/file', ['parameter1' => 15, 'parameter2' => 20]);
+```
+
 ## SQL
 
 ### MySql
@@ -75,13 +90,15 @@ Please, refer to the API (that you can generate), or to the code itself for deta
 
 Examples:
 
-    quoteFieldName('id');       // => '`id`'
-    quoteFieldName('user.id');  // => '`user`.`id`'
+```php
+quoteFieldName('id');       // => '`id`'
+quoteFieldName('user.id');  // => '`user`.`id`'
 
-    quoteFieldsNames(['id', 'login', 'password']);              // => ['`id`', '`login`', '`password`']
-    quoteFieldsNames(['user.id', 'login', 'password']);         // => ['`user`.`id`', '`login`', '`password`']
-    quoteFieldsNames(['id', 'login', 'password'], 'user');      // => ['`user`.`id`', '`user`.`login`', '`user`.`password`']
-    quoteFieldsNames(['user.id', 'login', 'password'], 'user'); // => ['`user`.`id`', '`user`.`login`', '`user`.`password`']
+quoteFieldsNames(['id', 'login', 'password']);              // => ['`id`', '`login`', '`password`']
+quoteFieldsNames(['user.id', 'login', 'password']);         // => ['`user`.`id`', '`login`', '`password`']
+quoteFieldsNames(['id', 'login', 'password'], 'user');      // => ['`user`.`id`', '`user`.`login`', '`user`.`password`']
+quoteFieldsNames(['user.id', 'login', 'password'], 'user'); // => ['`user`.`id`', '`user`.`login`', '`user`.`password`']
+```
 
 # Examples
 
