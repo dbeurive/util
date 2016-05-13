@@ -183,7 +183,7 @@ class MySqlTest extends PHPUnit_Framework_TestCase
     }
 
     // -------------------------------------------------------------------------------------------------------------
-    // quoteFieldsNames()
+    // qualifyFieldName()
     // -------------------------------------------------------------------------------------------------------------
 
     public function testQualifyFieldName() {
@@ -227,4 +227,25 @@ class MySqlTest extends PHPUnit_Framework_TestCase
         $this->expectException(\Exception::class);
         UtilMySql::qualifyFieldName('db.prod.user.id', 'profile', 'prod');
     }
+
+    // -------------------------------------------------------------------------------------------------------------
+    // qualifyFieldsNames()
+    // -------------------------------------------------------------------------------------------------------------
+
+    public function testQualifyFieldsNames() {
+        // Without database name
+
+        $this->assertCount(0, array_diff(['user.id'], UtilMySql::qualifyFieldsNames(['id'], 'user')));
+        $this->assertCount(0, array_diff(['user.id', 'user.login'], UtilMySql::qualifyFieldsNames(['id', 'login'], 'user')));
+        $this->assertCount(0, array_diff(['user.id', 'user.login'], UtilMySql::qualifyFieldsNames(['user.id', 'login'], 'user')));
+        $this->assertCount(0, array_diff(['db.user.id', 'user.login'], UtilMySql::qualifyFieldsNames(['db.user.id', 'login'], 'user')));
+
+        // With database name
+        $this->assertCount(0, array_diff(['prod.user.id'], UtilMySql::qualifyFieldsNames(['id'], 'user', 'prod')));
+        $this->assertCount(0, array_diff(['prod.user.id', 'prod.user.login'], UtilMySql::qualifyFieldsNames(['id', 'login'], 'user', 'prod')));
+        $this->assertCount(0, array_diff(['prod.user.id', 'prod.user.login'], UtilMySql::qualifyFieldsNames(['user.id', 'login'], 'user', 'prod')));
+        $this->assertCount(0, array_diff(['prod.user.id', 'prod.user.login'], UtilMySql::qualifyFieldsNames(['prod.user.id', 'login'], 'user', 'prod')));
+    }
+
+
 }

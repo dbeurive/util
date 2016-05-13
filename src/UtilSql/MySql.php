@@ -16,19 +16,19 @@ class MySql
      * Qualify a given field's name relatively to a given table's name, and, optionally, a given database name.
      * @param string $inFieldName Name of the field.
      * @param string $inTableName Name of the table.
-     * @param null|string $inBaseName Name of the database.
+     * @param null|string $inOptDatabaseName Name of the database.
      * @return string The method returns the qualified name of the field.
      * @throws \Exception
      */
-    static public function qualifyFieldName($inFieldName, $inTableName, $inBaseName=null) {
+    static public function qualifyFieldName($inFieldName, $inTableName, $inOptDatabaseName=null) {
 
         $tokens = explode('.', $inFieldName);
 
         // Field's name in the form "<field name>".
         if (1 == count($tokens)) {
             array_unshift($tokens, $inTableName);
-            if (! is_null($inBaseName)) {
-                array_unshift($tokens, $inBaseName);
+            if (! is_null($inOptDatabaseName)) {
+                array_unshift($tokens, $inOptDatabaseName);
             }
             return implode('.', $tokens);
         }
@@ -38,8 +38,8 @@ class MySql
             if ($tokens[0] != $inTableName) {
                 throw new \Exception("Invalid couple (field's name, table name): (\"${inFieldName}\", \"${inTableName}\").");
             }
-            if (! is_null($inBaseName)) {
-                array_unshift($tokens, $inBaseName);
+            if (! is_null($inOptDatabaseName)) {
+                array_unshift($tokens, $inOptDatabaseName);
             }
             return implode('.', $tokens);
         }
@@ -49,15 +49,30 @@ class MySql
                 throw new \Exception("Invalid couple (field's name, table name): (\"${inFieldName}\", \"${inTableName}\").");
             }
 
-            if (! is_null($inBaseName)) {
-                if ($tokens[0] != $inBaseName) {
-                    throw new \Exception("Invalid tuple (field's name, table name, database name): (\"${inFieldName}\", \"${inTableName}\", \"${inBaseName}\").");
+            if (! is_null($inOptDatabaseName)) {
+                if ($tokens[0] != $inOptDatabaseName) {
+                    throw new \Exception("Invalid tuple (field's name, table name, database name): (\"${inFieldName}\", \"${inTableName}\", \"${inOptDatabaseName}\").");
                 }
             }
             return implode('.', $tokens);
         }
 
         throw new \Exception("Invalid field's name \"${inFieldName}\".");
+    }
+
+    /**
+     * Qualify a given list of fields' names relatively to a given table's name, and, optionally, a given database name.
+     * @param array $inFieldsNames List of fields' names.
+     * @param string $inTableName Name of the table.
+     * @param null|string $inOptDatabaseName Name of the database.
+     * @return mixed
+     * @throws \Exception
+     */
+    static public function qualifyFieldsNames(array $inFieldsNames, $inTableName, $inOptDatabaseName=null) {
+
+        return array_map(function($e) use($inTableName, $inOptDatabaseName) {
+            return self::qualifyFieldName($e, $inTableName, $inOptDatabaseName);
+        }, $inFieldsNames);
     }
     
     /**

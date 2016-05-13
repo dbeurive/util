@@ -88,6 +88,7 @@ $result = UtilCode::require_with_args('/path/to/your/file', ['parameter1' => 15,
 | `quoteFieldName($inFieldName)`                                   | Quote a field's name. |
 | `quoteFieldsNames(array $inFieldsNames, $inOptTableName=null, $inOptDatabaseName=null)` | Quote, and optionally, fully qualify, an array of fields' names. |
 | `qualifyFieldName($inFieldName, $inTableName, $inBaseName=null)` | Qualify a given field's name relatively to a given table's name, and, optionally, a given database name. |
+| `qualifyFieldsNames(array $inFieldsNames, $inTableName, $inOptDatabaseName=null)` | Qualify a given list of fields' names relatively to a given table's name, and, optionally, a given database name. |
 
 Examples:
 
@@ -111,6 +112,11 @@ UtilMySql::qualifyFieldName('id', 'user', 'db');         // => 'db.user.id'
 UtilMySql::qualifyFieldName('user.id', 'user', 'db');    // => 'db.user.id'
 UtilMySql::qualifyFieldName('db.user.id', 'user', 'db'); // => 'db.user.id'
 
+UtilMySql::qualifyFieldsNames(['id', 'login'], 'user');                   // => ['user.id', 'user.login']
+UtilMySql::qualifyFieldsNames(['user.id', 'login'], 'user');              // => ['user.id', 'user.login']
+UtilMySql::qualifyFieldsNames(['id', 'login'], 'user', 'prod');           // => ['prod.user.id', 'prod.user.login']
+UtilMySql::qualifyFieldsNames(['user.id', 'login'], 'user', 'prod');      // => ['prod.user.id', 'prod.user.login']
+UtilMySql::qualifyFieldsNames(['prod.user.id', 'login'], 'user', 'prod'); // => ['prod.user.id', 'prod.user.login']
 ```
 
 ## Unit tests
