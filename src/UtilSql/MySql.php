@@ -13,6 +13,54 @@ namespace dbeurive\Util\UtilSql;
 class MySql
 {
     /**
+     * Qualify a given field's name relatively to a given table's name, and, optionally, a given database name.
+     * @param string $inFieldName Name of the field.
+     * @param string $inTableName Name of the table.
+     * @param null|string $inBaseName Name of the database.
+     * @return string The method returns the qualified name of the field.
+     * @throws \Exception
+     */
+    static public function qualifyFieldName($inFieldName, $inTableName, $inBaseName=null) {
+
+        $tokens = explode('.', $inFieldName);
+
+        // Field's name in the form "<field name>".
+        if (1 == count($tokens)) {
+            array_unshift($tokens, $inTableName);
+            if (! is_null($inBaseName)) {
+                array_unshift($tokens, $inBaseName);
+            }
+            return implode('.', $tokens);
+        }
+
+        // Field's name in the form "<table name>.<field name>".
+        if (2 == count($tokens)) {
+            if ($tokens[0] != $inTableName) {
+                throw new \Exception("Invalid couple (field's name, table name): (\"${inFieldName}\", \"${inTableName}\").");
+            }
+            if (! is_null($inBaseName)) {
+                array_unshift($tokens, $inBaseName);
+            }
+            return implode('.', $tokens);
+        }
+
+        if (3 == count($tokens)) {
+            if ($tokens[1] != $inTableName) {
+                throw new \Exception("Invalid couple (field's name, table name): (\"${inFieldName}\", \"${inTableName}\").");
+            }
+
+            if (! is_null($inBaseName)) {
+                if ($tokens[0] != $inBaseName) {
+                    throw new \Exception("Invalid tuple (field's name, table name, database name): (\"${inFieldName}\", \"${inTableName}\", \"${inBaseName}\").");
+                }
+            }
+            return implode('.', $tokens);
+        }
+
+        throw new \Exception("Invalid field's name \"${inFieldName}\".");
+    }
+    
+    /**
      * Quote a field's name.
      * @param string $inFieldName Name of the field to quote.
      *        The name can be fully qualified ("<table name>.<field name>") or not ("<field name>").
@@ -23,21 +71,13 @@ class MySql
      */
     static public function quoteFieldName($inFieldName) {
 
-        if (false !== strpos($inFieldName, '`')) {
-            throw new \Exception("Invalid field's name ${inFieldName}.");
-        }
-
         $tokens = explode('.', $inFieldName);
-        
-        if (1 == count($tokens)) {
-            return '`' . $tokens[0] . '`';
+
+        if (1 <= count($tokens) && count($tokens) <= 3) {
+            return implode('.', array_map(function ($e) { return self::__quoteToken($e); }, $tokens));
         }
 
-        if (2 == count($tokens)) {
-            return '`' . $tokens[0] . '`' . '.' . '`' . $tokens[1] . '`';
-        }
-
-        throw new \Exception("Invalid field's name ${inFieldName}.");
+        throw new \Exception("Invalid field's name \"${inFieldName}\".");
     }
 
     /**
@@ -49,18 +89,106 @@ class MySql
      * @param array $inFieldsNames Array of fields' names.
      *        The names can be fully qualified ("<table name>.<field name>") or not ("<field name>").
      * @param null|string $inOptTableName Name of a table used to fully qualify fields that need to.
+     * @param null|string $inOptDatabaseName Name of a database used to fully qualify fields that need to.
      * @return array The method returns an array of quoted fields' names.
      * @throws \Exception
      */
-    static public function quoteFieldsNames(array $inFieldsNames, $inOptTableName=null) {
+    static public function quoteFieldsNames(array $inFieldsNames, $inOptTableName=null, $inOptDatabaseName=null) {
 
-        $qualifier = function($e) use ($inOptTableName) {
-            if (0 === strpos($e, "${inOptTableName}.")) { return $e; }
-            return "${inOptTableName}.${e}";
+        $qualifier = function($e) {
+            return $e;
         };
 
-        $qualifier = empty($inOptTableName) ? function($e) { return $e; } : $qualifier;
+        if (is_null($inOptTableName) && !is_null($inOptDatabaseName)) {
+            throw new \Exception("Invalid use of the method \"quoteFieldsNames()\"!");
+        }
+
+        if (! is_null($inOptTableName) && is_null($inOptDatabaseName)) {
+            $qualifier = function($e) use ($inOptTableName, $inOptDatabaseName) {
+
+                $tokens = explode('.', $e);
+
+                if (count($tokens) == 1) {
+                    return "${inOptTableName}.${e}";
+                }
+
+                if (count($tokens) == 2) {
+                    if ($tokens[0] != $inOptTableName) {
+                        throw new \Exception("Invalid field's name \"${e}\". The name of the table conflicts with the specified one \"${inOptTableName}\".");
+                    }
+                    return "${e}";
+                }
+
+                if (count($tokens) == 3) {
+                    if ($tokens[1] != $inOptTableName) {
+                        throw new \Exception("Invalid field's name \"${e}\". The name of the table conflicts with the specified one \"${inOptTableName}\".");
+                    }
+                    return "${e}";
+                }
+
+                throw new \Exception("Invalid field's name \"${e}\".");
+            };
+        }
+
+        if (!is_null($inOptTableName) && !is_null($inOptDatabaseName)) {
+
+            $qualifier = function($e) use ($inOptTableName, $inOptDatabaseName) {
+
+                $tokens = explode('.', $e);
+
+                if (count($tokens) == 1) {
+                    return "${inOptDatabaseName}.${inOptTableName}.${e}";
+                }
+
+                if (count($tokens) == 2) {
+                    if ($tokens[0] != $inOptTableName) {
+                        throw new \Exception("Invalid field's name \"${e}\". The name of the table conflicts with the specified one \"${inOptTableName}\".");
+                    }
+                    return "${inOptDatabaseName}.${e}";
+                }
+
+                if (count($tokens) == 3) {
+                    if ($tokens[0] != $inOptDatabaseName) {
+                        throw new \Exception("Invalid field's name \"${e}\". The name of the database conflicts with the specified one \"${inOptDatabaseName}\".");
+                    }
+                    if ($tokens[1] != $inOptTableName) {
+                        throw new \Exception("Invalid field's name \"${e}\". The name of the table conflicts with the specified one \"${inOptTableName}\".");
+                    }
+                    return "${e}";
+                }
+
+                throw new \Exception("Invalid field's name \"${e}\".");
+            };
+        }
+
         $f = function($e) use ($qualifier) { return self::quoteFieldName($qualifier($e)); };
         return array_map($f, $inFieldsNames);
+    }
+
+
+
+
+
+    static private function __isTokenQuoted($inToken) {
+
+        if (preg_match('/^`[^`]+`$/', $inToken)) {
+            return true;
+        }
+
+        if (preg_match('/^[^`]+$/', $inToken)) {
+            return false;
+        }
+
+        throw new \Exception("Invalid token: \"${inToken}\".");
+    }
+
+
+    static private function __quoteToken($inToken) {
+
+        if (self::__isTokenQuoted($inToken)) {
+            return $inToken;
+        }
+
+        return '`' . $inToken . '`';
     }
 }

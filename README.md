@@ -85,19 +85,46 @@ $result = UtilCode::require_with_args('/path/to/your/file', ['parameter1' => 15,
 
 | Function                                                         | Description        |
 | ---------------------------------------------------------------- | ------------------ | 
-| `quoteFieldName($inFieldName)`                                   | Quote a field's name (see example below). |
-| `quoteFieldsNames(array $inFieldsNames, $inOptTableName=null)`   | Quote, and optionally, fully qualify, an array of fields' names (see example below). |
+| `quoteFieldName($inFieldName)`                                   | Quote a field's name. |
+| `quoteFieldsNames(array $inFieldsNames, $inOptTableName=null, $inOptDatabaseName=null)` | Quote, and optionally, fully qualify, an array of fields' names. |
+| `qualifyFieldName($inFieldName, $inTableName, $inBaseName=null)` | Qualify a given field's name relatively to a given table's name, and, optionally, a given database name. |
 
 Examples:
 
 ```php
-quoteFieldName('id');       // => '`id`'
-quoteFieldName('user.id');  // => '`user`.`id`'
+UtilMySql::quoteFieldName('id');            // => '`id`'
+UtilMySql::quoteFieldName('user.id');       // => '`user`.`id`'
+UtilMySql::quoteFieldName('prod.user.id');  // => '`prod`.`user`.`id`'
 
-quoteFieldsNames(['id', 'login', 'password']);              // => ['`id`', '`login`', '`password`']
-quoteFieldsNames(['user.id', 'login', 'password']);         // => ['`user`.`id`', '`login`', '`password`']
-quoteFieldsNames(['id', 'login', 'password'], 'user');      // => ['`user`.`id`', '`user`.`login`', '`user`.`password`']
-quoteFieldsNames(['user.id', 'login', 'password'], 'user'); // => ['`user`.`id`', '`user`.`login`', '`user`.`password`']
+UtilMySql::quoteFieldsNames(['id', 'login', 'password']);                           // => ['`id`', '`login`', '`password`']
+UtilMySql::quoteFieldsNames(['user.id', 'login', 'password']);                      // => ['`user`.`id`', '`login`', '`password`']
+UtilMySql::quoteFieldsNames(['id', 'login', 'password'], 'user');                   // => ['`user`.`id`', '`user`.`login`', '`user`.`password`']
+UtilMySql::quoteFieldsNames(['user.id', 'login', 'password'], 'user');              // => ['`user`.`id`', '`user`.`login`', '`user`.`password`']
+UtilMySql::quoteFieldsNames(['db.user.id', 'login', 'password'], 'user');           // => ['`db`.`user`.`id`', '`user`.`login`', '`user`.`password`']
+UtilMySql::quoteFieldsNames(['user.id', 'login', 'password'], 'user', 'prod');      // => ['`prod`.`user`.`id`', '`prod`.`user`.`login`', '`prod`.`user`.`password`']
+UtilMySql::quoteFieldsNames(['prod.user.id', 'login', 'password'], 'user', 'prod'); // => ['`prod`.`user`.`id`', '`prod`.`user`.`login`', '`prod`.`user`.`password`']
+
+UtilMySql::qualifyFieldName('id', 'user');               // => 'user.id'
+UtilMySql::qualifyFieldName(''user.id','user');          // => 'user.id'
+UtilMySql::qualifyFieldName('db.user.id', 'user');       // => 'db.user.id'
+UtilMySql::qualifyFieldName('id', 'user', 'db');         // => 'db.user.id'
+UtilMySql::qualifyFieldName('user.id', 'user', 'db');    // => 'db.user.id'
+UtilMySql::qualifyFieldName('db.user.id', 'user', 'db'); // => 'db.user.id'
+
+```
+
+## Unit tests
+
+| Function                                                                   | Description        |
+| -------------------------------------------------------------------------- | ------------------ | 
+| `call_private_or_protected_static_method($inClassName, $inMethodName)`     | Execute a private or a protected static method from a given class. |
+| `call_private_or_protected_method($inClassName, $inMethodName, $inObject)` | Execute a private or a protected non-static method from a given class, on the context of a given object. |
+
+Examples:
+
+```php
+UtilUnitTest::call_private_or_protected_static_method('ClassToTest', '__privateStatic', 10);
+UtilUnitTest::call_private_or_protected_method('ClassToTest', '__privateNonStatic', $o, 10); // $o of an instance of class "ClassToTest".
 ```
 
 # Examples
