@@ -30,7 +30,7 @@ class UtilUnitTest
     }
 
     /**
-     * Execute a private or a protected non-static method from a given class, on the context of a given object.
+     * Execute a private or a protected non-static method from a given class, within the context of a given object.
      * @param string $inClassName Name of the class.
      * @param string $inMethodName Name of the (private or protected) method to execute.
      * @param mixed $inObject Object that defines the execution's context.

@@ -118,7 +118,7 @@ UtilMySql::qualifyFieldName('db.user.id', 'user', 'db'); // => 'db.user.id'
 | Function                                                                   | Description        |
 | -------------------------------------------------------------------------- | ------------------ | 
 | `call_private_or_protected_static_method($inClassName, $inMethodName)`     | Execute a private or a protected static method from a given class. |
-| `call_private_or_protected_method($inClassName, $inMethodName, $inObject)` | Execute a private or a protected non-static method from a given class, on the context of a given object. |
+| `call_private_or_protected_method($inClassName, $inMethodName, $inObject)` | Execute a private or a protected non-static method from a given class, within the context of a given object. |
 
 Examples:
 
