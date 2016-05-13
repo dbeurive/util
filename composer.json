@@ -1,5 +1,5 @@
 {
-  "version": "1.0.15",
+  "version": "1.0.16",
   "name": "dbeurive/util",
   "description": "This package contains PHP utilities.",
   "license": "MIT",
@@ -12,7 +12,8 @@
   "keywords": ["php", "utilities"],
   "autoload": {
     "psr-4": {
-      "dbeurive\\Util\\": "src"
+      "dbeurive\\Util\\": "src",
+      "dbeurive\\UtilTest\\": "tests"
     }
   },
   "archive": {
