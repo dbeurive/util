@@ -124,7 +124,7 @@ Examples:
 
 ```php
 UtilUnitTest::call_private_or_protected_static_method('ClassToTest', '__privateStatic', 10);
-UtilUnitTest::call_private_or_protected_method('ClassToTest', '__privateNonStatic', $o, 10); // $o of an instance of class "ClassToTest".
+UtilUnitTest::call_private_or_protected_method('ClassToTest', '__privateNonStatic', $o, 10); // $o is an instance of class "ClassToTest".
 ```
 
 # Examples
