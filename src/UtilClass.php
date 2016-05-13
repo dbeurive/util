@@ -22,6 +22,7 @@ class UtilClass
      *         Otherwise the method returns the value false.
      */
     public static function implements_interface($inClassName, $inInterfaceName) {
+        $inInterfaceName = preg_replace('/^\\\/', '', $inInterfaceName);
         $implementations = class_implements($inClassName);
 
         foreach ($implementations as $_interfaceName => $_value) {
@@ -40,6 +41,9 @@ class UtilClass
      *         Otherwise the method returns the value false.
      */
     public static function implements_interfaces($inClassName, array $inInterfaceNames) {
+
+        $inInterfaceNames = array_map(function($e) { return preg_replace('/^\\\/', '', $e); }, $inInterfaceNames);
+
         foreach ($inInterfaceNames as $_name) {
             if (! self::implements_interface($inClassName, $_name)) {
                 return false;

@@ -12,7 +12,8 @@
   "keywords": ["php", "utilities"],
   "autoload": {
     "psr-4": {
-      "dbeurive\\Util\\": "src"
+      "dbeurive\\Util\\": "src",
+      "dbeurive\\UtilTest\\": "tests"
     }
   },
   "archive": {

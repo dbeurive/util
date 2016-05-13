@@ -1,5 +1,7 @@
 <?php
 
+namespace dbeurive\UtilTest;
+
 trait SetUp
 {
     private $__dirData = null;

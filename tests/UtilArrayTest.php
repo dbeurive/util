@@ -1,12 +1,14 @@
 <?php
 
+namespace dbeurive\UtilTest;
+
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'setUp.php';
 
 use dbeurive\Util\UtilArray;
 
-class UtilArrayTest extends PHPUnit_Framework_TestCase
+class UtilArrayTest extends \PHPUnit_Framework_TestCase
 {
-    use SetUp;
+    use \dbeurive\UtilTest\SetUp;
 
     public function setUp() {
         $this->__setUp();

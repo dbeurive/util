@@ -1,9 +1,11 @@
 <?php
 
+namespace dbeurive\UtilTest;
+
 use dbeurive\Util\UtilSql\MySql as UtilMySql;
 use dbeurive\Util\UtilUnitTest;
 
-class MySqlTest extends PHPUnit_Framework_TestCase
+class MySqlTest extends \PHPUnit_Framework_TestCase
 {
 
     public function setUp()

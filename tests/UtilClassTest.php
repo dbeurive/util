@@ -1,5 +1,7 @@
 <?php
 
+namespace dbeurive\UtilTest;
+
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'setUp.php';
 
 use dbeurive\Util\UtilClass;
@@ -46,21 +48,21 @@ class WeirdStuff implements PlantInterface, AnimalInterface {
     }
 }
 
-class UtilClassTest extends PHPUnit_Framework_TestCase
+class UtilClassTest extends \PHPUnit_Framework_TestCase
 {
-    use SetUp;
+    use \dbeurive\UtilTest\SetUp;
 
     public function setUp() {
         $this->__setUp();
     }
 
     public function test_implements_interface() {
-        $this->assertTrue(UtilClass::implements_interface('Dog', 'AnimalInterface'));
-        $this->assertFalse(UtilClass::implements_interface('Dog', 'PlantInterface'));
+        $this->assertTrue(UtilClass::implements_interface('\dbeurive\UtilTest\Dog', '\dbeurive\UtilTest\AnimalInterface'));
+        $this->assertFalse(UtilClass::implements_interface('\dbeurive\UtilTest\Dog', '\dbeurive\UtilTest\PlantInterface'));
     }
 
     public function test_implements_interfaces() {
-        $this->assertTrue(UtilClass::implements_interfaces('WeirdStuff', ['AnimalInterface', 'PlantInterface']));
-        $this->assertFalse(UtilClass::implements_interfaces('WeirdStuff', ['AnimalInterface', 'PlantInterface', 'Machine']));
+        $this->assertTrue(UtilClass::implements_interfaces('\dbeurive\UtilTest\WeirdStuff', ['\dbeurive\UtilTest\AnimalInterface', '\dbeurive\UtilTest\PlantInterface']));
+        $this->assertFalse(UtilClass::implements_interfaces('\dbeurive\UtilTest\WeirdStuff', ['\dbeurive\UtilTest\AnimalInterface', '\dbeurive\UtilTest\PlantInterface', '\dbeurive\UtilTest\Machine']));
     }
 }
