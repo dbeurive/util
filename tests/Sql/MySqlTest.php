@@ -8,9 +8,15 @@ use dbeurive\Util\UtilUnitTest;
 class MySqlTest extends \PHPUnit_Framework_TestCase
 {
 
+    private $__schema = [];
+
     public function setUp()
     {
         parent::setUp();
+        $this->__schema = [
+            'user'    => ['id', 'login'],
+            'profile' => ['id', 'age', 'fk_user_id']
+        ];
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -39,6 +45,54 @@ class MySqlTest extends \PHPUnit_Framework_TestCase
     public function test__quoteTokenFailure1() {
         $this->expectException(\Exception::class);
         UtilUnitTest::call_private_or_protected_static_method('\dbeurive\Util\UtilSql\MySql', '__quoteToken', 'id`');
+    }
+
+    public function test__developTag() {
+
+        // Will find the tag, and thus, will replace.
+
+        $sql = "SELECT __USER__ FROM `user`";
+
+        $expected = "SELECT user.id, user.login FROM `user`";
+        $result   = UtilUnitTest::call_private_or_protected_static_method('\dbeurive\Util\UtilSql\MySql', '__developTag', $sql, $this->__schema, '__USER__', 'user.*', false, false);
+        $this->assertEquals($expected, $result);
+
+        $expected = "SELECT `user`.`id`, `user`.`login` FROM `user`";
+        $result   = UtilUnitTest::call_private_or_protected_static_method('\dbeurive\Util\UtilSql\MySql', '__developTag', $sql, $this->__schema, '__USER__', 'user.*', false, true);
+        $this->assertEquals($expected, $result);
+
+        $expected = "SELECT user.id AS 'user.id', user.login AS 'user.login' FROM `user`";
+        $result   = UtilUnitTest::call_private_or_protected_static_method('\dbeurive\Util\UtilSql\MySql', '__developTag', $sql, $this->__schema, '__USER__', 'user.*', true, false);
+        $this->assertEquals($expected, $result);
+
+        $expected = "SELECT `user`.`id` AS 'user.id', `user`.`login` AS 'user.login' FROM `user`";
+        $result   = UtilUnitTest::call_private_or_protected_static_method('\dbeurive\Util\UtilSql\MySql', '__developTag', $sql, $this->__schema, '__USER__', 'user.*', true, true);
+        $this->assertEquals($expected, $result);
+
+        $sql = "SELECT\n__USER__\nFROM `user`";
+
+        $expected = "SELECT\nuser.id, user.login\nFROM `user`";
+        $result   = UtilUnitTest::call_private_or_protected_static_method('\dbeurive\Util\UtilSql\MySql', '__developTag', $sql, $this->__schema, '__USER__', 'user.*', false, false);
+        $this->assertEquals($expected, $result);
+
+        $expected = "SELECT\n`user`.`id`, `user`.`login`\nFROM `user`";
+        $result   = UtilUnitTest::call_private_or_protected_static_method('\dbeurive\Util\UtilSql\MySql', '__developTag', $sql, $this->__schema, '__USER__', 'user.*', false, true);
+        $this->assertEquals($expected, $result);
+
+        $expected = "SELECT\nuser.id AS 'user.id', user.login AS 'user.login'\nFROM `user`";
+        $result   = UtilUnitTest::call_private_or_protected_static_method('\dbeurive\Util\UtilSql\MySql', '__developTag', $sql, $this->__schema, '__USER__', 'user.*', true, false);
+        $this->assertEquals($expected, $result);
+
+        $expected = "SELECT\n`user`.`id` AS 'user.id', `user`.`login` AS 'user.login'\nFROM `user`";
+        $result   = UtilUnitTest::call_private_or_protected_static_method('\dbeurive\Util\UtilSql\MySql', '__developTag', $sql, $this->__schema, '__USER__', 'user.*', true, true);
+        $this->assertEquals($expected, $result);
+
+        // Will not find the tag, and thus, will not replace
+
+        $sql = "SELECT __PROFILE__ FROM `user`";
+        $expected = "SELECT __PROFILE__ FROM `user`";
+        $result   = UtilUnitTest::call_private_or_protected_static_method('\dbeurive\Util\UtilSql\MySql', '__developTag', $sql, $this->__schema, '__USER__', 'user.*', true, true);
+        $this->assertEquals($expected, $result);
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -95,6 +149,79 @@ class MySqlTest extends \PHPUnit_Framework_TestCase
         $this->expectException(\Exception::class);
         $fieldName = '`id';
         UtilMySql::quoteFieldName($fieldName);
+    }
+
+    // -------------------------------------------------------------------------------------------------------------
+    // developSql()
+    // -------------------------------------------------------------------------------------------------------------
+
+    public function testDevelopSql() {
+
+        $sql      = "SELECT __USER__ FROM `user`";
+        $tags     = ['__USER__' => 'user.*', '__PROFILE__' => 'profile.*'];
+
+        $expected = "SELECT user.id, user.login FROM `user`";
+        $result = UtilMySql::developSql($sql, $this->__schema, false, false, $tags);
+        $this->assertEquals($expected, $result);
+
+        $expected = "SELECT user.id AS 'user.id', user.login AS 'user.login' FROM `user`";
+        $result   = UtilMySql::developSql($sql, $this->__schema, true, false, $tags);
+        $this->assertEquals($expected, $result);
+
+        $expected = "SELECT `user`.`id` AS 'user.id', `user`.`login` AS 'user.login' FROM `user`";
+        $result   = UtilMySql::developSql($sql, $this->__schema, true, true, $tags);
+        $this->assertEquals($expected, $result);
+
+        // -------
+
+        $sql      = "SELECT user.* FROM `user`";
+        $tags     = [];
+
+        $expected = "SELECT user.id, user.login FROM `user`";
+        $result = UtilMySql::developSql($sql, $this->__schema, false, false, $tags);
+        $this->assertEquals($expected, $result);
+
+        $expected = "SELECT user.id AS 'user.id', user.login AS 'user.login' FROM `user`";
+        $result = UtilMySql::developSql($sql, $this->__schema, true, false, $tags);
+        $this->assertEquals($expected, $result);
+
+        $expected = "SELECT `user`.`id` AS 'user.id', `user`.`login` AS 'user.login' FROM `user`";
+        $result = UtilMySql::developSql($sql, $this->__schema, true, true, $tags);
+        $this->assertEquals($expected, $result);
+
+        // -------
+
+        $sql      = "SELECT __USER__, __PROFILE__ FROM `user` INNER JOIN `profile` ON user.id=profile.fk_user_id";
+        $tags     = ['__USER__' => 'user.*', '__PROFILE__' => 'profile.*'];
+
+        $expected = "SELECT user.id, user.login, profile.id, profile.age, profile.fk_user_id FROM `user` INNER JOIN `profile` ON user.id=profile.fk_user_id";
+        $result   = UtilUnitTest::call_private_or_protected_static_method('\dbeurive\Util\UtilSql\MySql', 'developSql', $sql, $this->__schema, false, false, $tags);
+        $this->assertEquals($expected, $result);
+
+        $expected = "SELECT user.id AS 'user.id', user.login AS 'user.login', profile.id AS 'profile.id', profile.age AS 'profile.age', profile.fk_user_id AS 'profile.fk_user_id' FROM `user` INNER JOIN `profile` ON user.id=profile.fk_user_id";
+        $result   = UtilUnitTest::call_private_or_protected_static_method('\dbeurive\Util\UtilSql\MySql', 'developSql', $sql, $this->__schema, true, false, $tags);
+        $this->assertEquals($expected, $result);
+
+        $expected = "SELECT `user`.`id` AS 'user.id', `user`.`login` AS 'user.login', `profile`.`id` AS 'profile.id', `profile`.`age` AS 'profile.age', `profile`.`fk_user_id` AS 'profile.fk_user_id' FROM `user` INNER JOIN `profile` ON user.id=profile.fk_user_id";
+        $result   = UtilUnitTest::call_private_or_protected_static_method('\dbeurive\Util\UtilSql\MySql', 'developSql', $sql, $this->__schema, true, true, $tags);
+        $this->assertEquals($expected, $result);
+
+        // -------
+
+        $sql      = "SELECT user.*, profile.* FROM `user` INNER JOIN `profile` ON user.id=profile.fk_user_id";
+        $tags     = [];
+
+        $expected = "SELECT user.id, user.login, profile.id, profile.age, profile.fk_user_id FROM `user` INNER JOIN `profile` ON user.id=profile.fk_user_id";
+        $result   = UtilUnitTest::call_private_or_protected_static_method('\dbeurive\Util\UtilSql\MySql', 'developSql', $sql, $this->__schema, false, false, $tags);
+        $this->assertEquals($expected, $result);
+
+        $expected = "SELECT user.id AS 'user.id', user.login AS 'user.login', profile.id AS 'profile.id', profile.age AS 'profile.age', profile.fk_user_id AS 'profile.fk_user_id' FROM `user` INNER JOIN `profile` ON user.id=profile.fk_user_id";
+        $result   = UtilUnitTest::call_private_or_protected_static_method('\dbeurive\Util\UtilSql\MySql', 'developSql', $sql, $this->__schema, true, false, $tags);
+        $this->assertEquals($expected, $result);
+
+        $expected = "SELECT `user`.`id` AS 'user.id', `user`.`login` AS 'user.login', `profile`.`id` AS 'profile.id', `profile`.`age` AS 'profile.age', `profile`.`fk_user_id` AS 'profile.fk_user_id' FROM `user` INNER JOIN `profile` ON user.id=profile.fk_user_id";
+        $result   = UtilUnitTest::call_private_or_protected_static_method('\dbeurive\Util\UtilSql\MySql', 'developSql', $sql, $this->__schema, true, true, $tags);
+        $this->assertEquals($expected, $result);
     }
 
     // -------------------------------------------------------------------------------------------------------------

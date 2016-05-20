@@ -51,7 +51,7 @@ Please, refer to the API (that you can generate), or to the code itself for deta
 | ------------------ | ------------------ |  
 | `to_callable_php_file($inData, $inOptFilePath=false)` | Return a string that represents the PHP code that, if executed, returns a given PHP data. |
 
-Examples:
+### Examples
 
 ```php
 $data = ['A', 'B', 'C'];
@@ -73,7 +73,7 @@ $newData = require '/path/to/your/file.php'; // $newData = ['A', 'B', 'C'];
 | ------------------ | ------------------ |  
 | `require_with_args($inPath, array $inArgs)` | Loads and executes a given PHP file, just like the function `require()`, except that it allows the caller to pass parameters to the code being executed. |
 
-Examples:
+### Examples
 
 ```php
 $result = UtilCode::require_with_args('/path/to/your/file', ['parameter1' => 15, 'parameter2' => 20]);
@@ -89,8 +89,9 @@ $result = UtilCode::require_with_args('/path/to/your/file', ['parameter1' => 15,
 | `quoteFieldsNames(array $inFieldsNames, $inOptTableName=null, $inOptDatabaseName=null)` | Quote, and optionally, fully qualify, an array of fields' names. |
 | `qualifyFieldName($inFieldName, $inTableName, $inBaseName=null)` | Qualify a given field's name relatively to a given table's name, and, optionally, a given database name. |
 | `qualifyFieldsNames(array $inFieldsNames, $inTableName, $inOptDatabaseName=null)` | Qualify a given list of fields' names relatively to a given table's name, and, optionally, a given database name. |
+| `developSql($inSqlTemplate, array $inSchema, $inOptAs=false, $inOptQuote=false, array $inTags=[])` | "Develop" a SQL request. The term "develop" means "replace an expression like 'user.*' into a list of fields in SELECT statements". Please see the explanation below. |
 
-Examples:
+### Examples
 
 ```php
 UtilMySql::quoteFieldName('id');            // => '`id`'
@@ -119,6 +120,70 @@ UtilMySql::qualifyFieldsNames(['user.id', 'login'], 'user', 'prod');      // => 
 UtilMySql::qualifyFieldsNames(['prod.user.id', 'login'], 'user', 'prod'); // => ['prod.user.id', 'prod.user.login']
 ```
 
+### Explanation for method `developSql()`
+
+First, let's consider these 3 examples:
+
+**Example 1:**: The SQL "template" below:
+
+    SELECT user.* FROM `user`
+    
+Can be _developed_ into one of these expressions: 
+
+    SELECT user.id, user.login FROM `user`
+    SELECT user.id AS 'user.id', user.login AS 'user.login' FROM `user`
+    SELECT `user`.`id` AS 'user.id', `user`.`login` AS 'user.login' FROM `user`
+
+**Example 2:**: And the (silly) SQL "template" below:
+
+    SELECT user.*, profile.* FROM `user` INNER JOIN `profile` ON user.id=profile.fk_user_id
+    
+Can be _developed_ into one of these expressions:
+ 
+    SELECT user.id, user.login, profile.id, profile.age, profile.fk_user_id FROM `user` INNER JOIN `profile` ON user.id=profile.fk_user_id
+    SELECT user.id AS 'user.id', user.login AS 'user.login', profile.id AS 'profile.id', profile.age AS 'profile.age', profile.fk_user_id AS 'profile.fk_user_id' FROM `user` INNER JOIN `profile` ON user.id=profile.fk_user_id
+    SELECT `user`.`id` AS 'user.id', `user`.`login` AS 'user.login', `profile`.`id` AS 'profile.id', `profile`.`age` AS 'profile.age', `profile`.`fk_user_id` AS 'profile.fk_user_id' FROM `user` INNER JOIN `profile` ON user.id=profile.fk_user_id
+
+**Example 3:**: And the (silly) SQL "template" below:
+
+    SELECT __USER__ FROM `user` WHERE user.login='user.*'
+
+Can be _developed_ into one of these expressions: 
+
+    SELECT user.id, user.login FROM `user` WHERE user.login='user.*'
+    SELECT user.id AS 'user.id', user.login AS 'user.login' FROM `user` WHERE user.login='user.*'
+    SELECT `user`.`id` AS 'user.id', `user`.`login` AS 'user.login' FROM `user` WHERE user.login='user.*'
+
+**For example 1**
+
+    $template = "SELECT user.* FROM `user`";
+    $schema   = [ 'user' => ['id', 'login'], 'profile' => ['id', 'age', 'fk_user_id'] ];
+    
+    $result = UtilMySql::developSql($template, $schema, false, false); // => SELECT user.id, user.login FROM `user`
+    $result = UtilMySql::developSql($template, $schema, true, false);  // => SELECT user.id AS 'user.id', user.login AS 'user.login' FROM `user`
+    $result = UtilMySql::developSql($template, $schema, true, true);   // => SELECT `user`.`id` AS 'user.id', `user`.`login` AS 'user.login' FROM `user`
+
+**For example 2**
+
+    $template = "SELECT user.*, profile.* FROM `user` INNER JOIN `profile` ON user.id=profile.fk_user_id";
+    $schema = [ 'user' => ['id', 'login'], 'profile' => ['id', 'age', 'fk_user_id'] ];
+
+    $result = UtilMySql::developSql($template, $schema, false, false); // => SELECT user.id, user.login, profile.id, profile.age, profile.fk_user_id FROM `user` INNER JOIN `profile` ON user.id=profile.fk_user_id
+    $result = UtilMySql::developSql($template, $schema, true, false);  // => SELECT user.id AS 'user.id', user.login AS 'user.login', profile.id AS 'profile.id', profile.age AS 'profile.age', profile.fk_user_id AS 'profile.fk_user_id' FROM `user` INNER JOIN `profile` ON user.id=profile.fk_user_id
+    $result = UtilMySql::developSql($template, $schema, true, true);   // => SELECT `user`.`id` AS 'user.id', `user`.`login` AS 'user.login', `profile`.`id` AS 'profile.id', `profile`.`age` AS 'profile.age', `profile`.`fk_user_id` AS 'profile.fk_user_id' FROM `user` INNER JOIN `profile` ON user.id=profile.fk_user_id
+
+**For example 3**
+
+    $template = "SELECT __USER__ FROM `user` WHERE user.login='user.*'";
+    $schema   = [ 'user' => ['id', 'login'], 'profile' => ['id', 'age', 'fk_user_id'] ];
+    $tags     = ['__USER__' => 'user.*'];
+    
+    $result = UtilMySql::developSql($template, $schema, false, false, $tags); // => SELECT user.id, user.login FROM `user`
+    $result = UtilMySql::developSql($template, $schema, true, false, $tags);  // => SELECT user.id AS 'user.id', user.login AS 'user.login' FROM `user`
+    $result = UtilMySql::developSql($template, $schema, true, true, $tags);   // => SELECT `user`.`id` AS 'user.id', `user`.`login` AS 'user.login' FROM `user`
+    
+    
+
 ## Unit tests
 
 | Function                                                                   | Description        |
@@ -126,7 +191,7 @@ UtilMySql::qualifyFieldsNames(['prod.user.id', 'login'], 'user', 'prod'); // => 
 | `call_private_or_protected_static_method($inClassName, $inMethodName)`     | Execute a private or a protected static method from a given class. |
 | `call_private_or_protected_method($inClassName, $inMethodName, $inObject)` | Execute a private or a protected non-static method from a given class, within the context of a given object. |
 
-Examples:
+### Examples
 
 ```php
 UtilUnitTest::call_private_or_protected_static_method('ClassToTest', '__privateStatic', 10);

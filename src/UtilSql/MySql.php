@@ -180,10 +180,117 @@ class MySql
         return array_map($f, $inFieldsNames);
     }
 
+    /**
+     * "Develop" a SQL request. The term "develop" means "replace an expression like 'user.*' into a list of fields in SELECT statements".
+     * Selected fields' names may be "quoted" or "explicitly named using AS", or both.
+     *    Quoted only:                       "`user`.`id`, `user`.`login`..."
+     *    Not Quoted only:                   "user.id, user.login..."
+     *    Quoted and explicitly named:       "`user`.`id` as 'user.id', `user`.`login` as 'user.login'..."
+     *    Not quoted and explicitly named:   "user.id as 'user.id', user.login as 'user.login'..."
+     * @param string $inSqlTemplate The SQL template.
+     *        Examples: "SELECT user.* FROM `user`"
+     *                  "SELECT __USER__ FROM `user`" (this implies that you specify tags - see the last parameters $inTags)
+     * @param array $inSchema Database' schema.
+     *        This parameter is an array which keys are the tables' names and the values the list of fields.
+     * @param bool $inOptAs Should the selected fields be explicitly named using "AS" ?
+     * @param bool $inOptQuote This flag indicates whether the fields' names within the SQL fragment should be quoted or not.
+     * @param array $inTags When you can not specify the fields' names to develop using the notation "<table name>.*" (for example: "user.*"), then you can use this parameter.
+     *        This situation may arise if, within the SQL request, you have a value equal to "user.*", for example.
+     *        For example: SELECT user.* FROM user WHERE user.login='user.*'
+     *        OK, this is a silly example, by it illustrates the situation.
+     *        In this case, you put unique tags in your SQL request, and you specify how the method should handle these tags.
+     *        For example: SELECT __USER__, __PROFILE__ FROM `user` INNER JOIN `profile` ON user.id=profile.fk_user_id
+     *                     $inTags = ['__USER__' => 'user.*', '__PROFILE__' => 'profile.*']
+     * @return string
+     * @throws \Exception
+     */
+    static public function developSql($inSqlTemplate, array $inSchema, $inOptAs=false, $inOptQuote=false, array $inTags=[]) {
 
+        if (0 == count($inTags)) {
+            /**
+             * @var string $_tableName
+             * @var array $_fieldsNames
+             */
+            $newTags = [];
+            foreach ($inSchema as $_tableName => $_fieldsNames) {
+                $newTags["${_tableName}.\\*"] = "${_tableName}.*";
+            }
+            $inTags = $newTags;
+        }
 
+        /**
+         * @var string $_tag
+         * @var string $_replacement
+         */
+        foreach ($inTags as $_tag => $_replacement) {
+            $inSqlTemplate = self::__developTag($inSqlTemplate, $inSchema, $_tag, $_replacement, $inOptAs, $inOptQuote);
+        }
 
+        return $inSqlTemplate;
+    }
 
+    /**
+     * Replace a tag by a "select SQL fragment" within a SQL template.
+     * Selected fields' names may be "quoted" or "explicitly named using AS", or both.
+     *    Quoted only:                       "`user`.`id`, `user`.`login`..."
+     *    Not Quoted only:                   "user.id, user.login..."
+     *    Quoted and explicitly named:       "`user`.`id` as 'user.id', `user`.`login` as 'user.login'..."
+     *    Not quoted and explicitly named:   "user.id as 'user.id', user.login as 'user.login'..."
+     * @param string $inSqlTemplate SQL template.
+     * @param array $inSchema Database' schema.
+     *        This parameter is an array which keys are the tables' names and the values the list of fields.
+     * @param string $inTag Tag to search for.
+     * @param string $inReplacementSpec Replacement' specification (ex: "user.*" or "`user`.*").
+     * @param bool $inOptAs Should the selected fields be explicitly named using "AS" ? 
+     * @param bool $inOptQuote This flag indicates whether the fields' names within the SQL fragment should be quoted or not.
+     * @return string
+     * @throws \Exception
+     */
+    static private function __developTag($inSqlTemplate, array $inSchema, $inTag, $inReplacementSpec, $inOptAs=false, $inOptQuote=false) {
+
+        // Make sure that the replacement is valid.
+        // Valid string is: "<table name>.*" (ex: "user.*").
+        $specTokens = [];
+        if (0 === preg_match('/^([\w]+)\.\*$/', $inReplacementSpec, $specTokens)) {
+            throw new \Exception("Invalid replacement specification \"${inReplacementSpec}\".");
+        }
+        $tableName = $specTokens[1];
+
+        // Is the name of the table quoted ? (ex: `user`.*)
+        // The line below may throw an exception!
+        if (self::__isTokenQuoted($tableName)) {
+            $tableName = substr($tableName, 1, -1);
+        }
+
+        // Make sure that the specified table exists.
+        if (! array_key_exists($tableName, $inSchema)) {
+            throw new \Exception("Invalid replacement specification \"${inReplacementSpec}\". The table \"${tableName}\" does not exist.");
+        }
+
+        // Now perform the replacement.
+        $tokens = preg_split("/${inTag}/", $inSqlTemplate);
+        if (0 == count($tokens)) return $inSqlTemplate;
+
+        $glue = ''; // Unlike many languages, this is not necessary... but I write it anyway.
+        $qualified = self::qualifyFieldsNames($inSchema[$tableName], $tableName); // ['user.id', 'user.login'...]
+        $quoter = $inOptQuote ? function($e) { return self::quoteFieldName($e); } : function($e) { return $e; };
+
+        if ($inOptAs) {
+            $glue = implode(', ', array_map(function($e) use($quoter) { return "{$quoter($e)} AS '${e}'"; }, $qualified));
+        } else {
+            $glue = implode(', ', array_map(function($e) use($quoter) { return "{$quoter($e)}"; }, $qualified));
+        }
+
+        return implode($glue, $tokens);
+    }
+
+    /**
+     * Test if a "word" is "quoted".
+     * Example: "`user`" is quoted, but "user" is not.
+     * @param string $inToken word to test.
+     * @return bool
+     * @throws \Exception
+     */
     static private function __isTokenQuoted($inToken) {
 
         if (preg_match('/^`[^`]+`$/', $inToken)) {
@@ -197,7 +304,13 @@ class MySql
         throw new \Exception("Invalid token: \"${inToken}\".");
     }
 
-
+    /**
+     * Quote a "word".
+     * Example: "user" is quoted as "`user`".
+     * @param string $inToken Word to quote.
+     * @return string The method returns the quoted word.
+     * @throws \Exception
+     */
     static private function __quoteToken($inToken) {
 
         if (self::__isTokenQuoted($inToken)) {
