@@ -200,5 +200,5 @@ UtilUnitTest::call_private_or_protected_method('ClassToTest', '__privateNonStati
 
 # Examples
 
-The unit tests are good examples.
+The [unit tests](https://github.com/dbeurive/util/tree/master/tests) are good examples.
 
