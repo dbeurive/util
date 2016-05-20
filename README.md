@@ -134,7 +134,7 @@ Can be _developed_ into one of these expressions:
     SELECT user.id AS 'user.id', user.login AS 'user.login' FROM `user`
     SELECT `user`.`id` AS 'user.id', `user`.`login` AS 'user.login' FROM `user`
 
-**Example 2:**: And the (silly) SQL "template" below:
+**Example 2:**: The SQL "template" below:
 
     SELECT user.*, profile.* FROM `user` INNER JOIN `profile` ON user.id=profile.fk_user_id
     
