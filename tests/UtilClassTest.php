@@ -65,4 +65,9 @@ class UtilClassTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue(UtilClass::implements_interfaces('\dbeurive\UtilTest\WeirdStuff', ['\dbeurive\UtilTest\AnimalInterface', '\dbeurive\UtilTest\PlantInterface']));
         $this->assertFalse(UtilClass::implements_interfaces('\dbeurive\UtilTest\WeirdStuff', ['\dbeurive\UtilTest\AnimalInterface', '\dbeurive\UtilTest\PlantInterface', '\dbeurive\UtilTest\Machine']));
     }
+
+    public function test_get_namespace() {
+        $this->assertEquals(__NAMESPACE__, UtilClass::get_namespace(__FILE__));
+        $this->assertNull(UtilClass::get_namespace(__DIR__ . DIRECTORY_SEPARATOR . 'bootstrap.php'));
+    }
 }
