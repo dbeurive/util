@@ -2,7 +2,7 @@
 
 namespace dbeurive\UtilTest;
 
-require_once __DIR__ . DIRECTORY_SEPARATOR . 'setUp.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'SetUp.php';
 
 use dbeurive\Util\UtilArray;
 
