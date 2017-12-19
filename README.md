@@ -220,6 +220,15 @@ UtilUnitTest::call_private_or_protected_static_method('ClassToTest', '__privateS
 UtilUnitTest::call_private_or_protected_method('ClassToTest', '__privateNonStatic', $o, 10); // $o is an instance of class "ClassToTest".
 ```
 
-# <a name="a17"></a>Examples
+## <a name="a17"></a>Binary tools
+
+TODO
+
+## <a name="a18"></a>Debug
+
+TODO
+
+# <a name="a19"></a>Examples
 
 The [unit tests](https://github.com/dbeurive/util/tree/master/tests) are good examples.
+
